@@ -105,7 +105,3 @@ def create_order():
 # This single route serves your main webpage.
 # It should be defined AFTER your API routes.
 
-@app.route('/')
-def serve_frontend():
-    """Serve the main HTML file."""
-    return send_from_directory('../customer/template', 'index.html')
