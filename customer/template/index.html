@@ -8,66 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .animate-pop {
-            animation: pop 0.3s ease-out;
-        }
-        @keyframes pop {
-            0% { transform: scale(0.9); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .animate-new-order {
-            animation: pulse-bg 1.5s infinite;
-        }
-        @keyframes pulse-bg {
-            0% { background-color: #fefcbf; }
-            50% { background-color: #fde68a; }
-            100% { background-color: #fefcbf; }
-        }
-        .category-tab {
-            transition: all 0.3s ease;
-        }
-        .category-tab:hover {
-            transform: translateY(-2px);
-        }
-        .category-tab.active {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-        }
-        .menu-item-card {
-            transition: all 0.3s ease;
-        }
-        .menu-item-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #f97316;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Inter', sans-serif; }
+        /* Add other styles from your original file here if needed */
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- App Container -->
     <div id="app" class="min-h-screen">
-        <!-- Header -->
         <header class="bg-white shadow-md sticky top-0 z-40">
             <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
@@ -75,176 +22,50 @@
                         <i data-lucide="utensils-crossed" class="h-8 w-8 text-orange-500"></i>
                         <h1 class="text-xl font-bold text-gray-800">Vanita Lunch Home</h1>
                     </div>
-                    <div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
-                        <button id="customerViewBtn" class="px-3 py-1 text-sm font-medium text-white bg-orange-500 rounded-md shadow-sm">Customer</button>
-                        <button id="adminViewBtn" class="relative px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-md">
-                            Admin
-                            <span id="adminNotification" class="hidden absolute -top-1 -right-1 h-3 w-3">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                            </span>
-                        </button>
-                    </div>
                 </div>
             </nav>
         </header>
 
-        <!-- Main Content -->
         <main class="container mx-auto p-4 sm:p-6 lg:p-8">
-
-            <!-- Customer View -->
-            <div id="customerView">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Menu Section -->
-                    <div class="lg:col-span-2">
-                        <div class="text-center mb-8">
-                            <h2 class="text-3xl font-bold tracking-tight text-gray-900">Today's Menu</h2>
-                            <p class="mt-2 text-lg text-gray-600">Authentic flavors, cooked with love.</p>
-                        </div>
-                        
-                        <!-- Category Tabs -->
-                        <div id="category-tabs" class="flex flex-wrap justify-center gap-3 mb-8">
-                            <button class="category-tab px-6 py-3 rounded-full text-sm font-medium bg-white shadow-md hover:shadow-lg transition-all duration-300 active" data-category="all">
-                                All Items
-                            </button>
-                            <!-- Dynamic category tabs will be added here -->
-                        </div>
-                        
-                        <!-- Loading State -->
-                        <div id="loading-menu" class="text-center py-12">
-                            <div class="loading mx-auto"></div>
-                            <p class="mt-4 text-gray-600">Loading delicious menu...</p>
-                        </div>
-                        
-                        <!-- Menu Items -->
-                        <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
-                            <!-- Menu items will be injected here by JavaScript -->
-                        </div>
-                        
-                        <!-- Error State -->
-                        <div id="error-menu" class="hidden text-center py-12 bg-red-50 rounded-lg">
-                            <i data-lucide="alert-circle" class="mx-auto h-12 w-12 text-red-500"></i>
-                            <h3 class="mt-2 text-lg font-medium text-red-900">Failed to load menu</h3>
-                            <p class="mt-1 text-red-700">Please refresh the page or try again later.</p>
-                            <button id="retry-menu" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                                Retry
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Cart Section -->
-                    <div class="lg:col-span-1">
-                        <div class="bg-white p-6 rounded-lg shadow-lg sticky top-24">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold">Your Order</h3>
-                                <div class="flex items-center space-x-2">
-                                    <span id="cart-count" class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">0</span>
-                                    <i data-lucide="shopping-cart" class="h-6 w-6 text-orange-500"></i>
-                                </div>
-                            </div>
-                            <div id="cart-items" class="divide-y divide-gray-200">
-                                <p id="cart-empty-msg" class="text-gray-500 py-4 text-center">Your cart is empty.</p>
-                            </div>
-                            <div id="cart-summary" class="mt-6 pt-4 border-t-2 border-dashed border-gray-200 hidden">
-                                <div class="flex justify-between font-semibold text-lg">
-                                    <span>Total</span>
-                                    <span id="cart-total">₹0.00</span>
-                                </div>
-                                <button id="checkoutBtn" class="w-full mt-6 bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center space-x-2">
-                                    <i data-lucide="credit-card" class="h-5 w-5"></i>
-                                    <span>Proceed to Checkout</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin View -->
-            <div id="adminView" class="hidden">
-                 <!-- Admin Sub-navigation -->
-                <div class="mb-8 border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                        <button id="liveOrdersTabBtn" class="border-orange-500 text-orange-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Live Orders</button>
-                        <button id="menuEditorTabBtn" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Menu Editor</button>
-                    </nav>
-                </div>
-
-                <!-- Live Orders View -->
-                <div id="liveOrdersView">
-                    <div class="text-center mb-4">
-                        <h2 class="text-3xl font-bold tracking-tight text-gray-900">Admin Dashboard</h2>
-                        <p class="mt-2 text-lg text-gray-600">Live incoming orders.</p>
-                    </div>
-                    <div id="orders-container" class="space-y-6">
-                        <div id="no-orders-msg" class="text-center py-12 bg-white rounded-lg shadow-md">
-                            <i data-lucide="receipt" class="mx-auto h-12 w-12 text-gray-400"></i>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">No new orders</h3>
-                            <p class="mt-1 text-sm text-gray-500">New orders will appear here automatically.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Menu Editor View -->
-                <div id="menuEditorView" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
                     <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold tracking-tight text-gray-900">Menu Editor</h2>
-                        <p class="mt-2 text-lg text-gray-600">Add or remove menu items.</p>
+                        <h2 class="text-3xl font-bold tracking-tight text-gray-900">Today's Menu</h2>
+                        <p class="mt-2 text-lg text-gray-600">Authentic flavors, cooked with love.</p>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Form to add new item -->
-                        <div class="lg:col-span-1">
-                            <form id="menuItemForm" class="bg-white p-6 rounded-lg shadow-lg space-y-4 sticky top-24">
-                                <h3 class="text-xl font-bold">Add New Item</h3>
-                                <div>
-                                    <label for="itemName" class="block text-sm font-medium text-gray-700">Item Name</label>
-                                    <input type="text" id="itemName" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                                </div>
-                                <div>
-                                    <label for="itemDescription" class="block text-sm font-medium text-gray-700">Description</label>
-                                    <textarea id="itemDescription" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"></textarea>
-                                </div>
-                                <div>
-                                    <label for="itemPrice" class="block text-sm font-medium text-gray-700">Price</label>
-                                    <input type="number" id="itemPrice" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                                </div>
-                                <div>
-                                    <label for="itemCategory" class="block text-sm font-medium text-gray-700">Category</label>
-                                    <select id="itemCategory" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                                        <option value="">Select Category</option>
-                                        <option value="Main Course">Main Course</option>
-                                        <option value="Thali">Thali</option>
-                                        <option value="Dal & Curry">Dal & Curry</option>
-                                        <option value="Rice & Biryani">Rice & Biryani</option>
-                                        <option value="Bread">Bread</option>
-                                        <option value="Beverages">Beverages</option>
-                                        <option value="Desserts">Desserts</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="itemImage" class="block text-sm font-medium text-gray-700">Image URL</label>
-                                    <input type="url" id="itemImage" placeholder="https://placehold.co/..." required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
-                                </div>
-                                <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2">
-                                    <i data-lucide="plus-circle" class="h-5 w-5"></i>
-                                    <span>Add Item to Menu</span>
-                                </button>
-                            </form>
+                    <div id="loading-menu" class="text-center py-12">
+                        <p class="mt-4 text-gray-600">Loading delicious menu...</p>
+                    </div>
+                    <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
                         </div>
-                        <!-- List of current items -->
-                        <div id="current-menu-list" class="lg:col-span-2 space-y-4">
-                           <!-- Menu items for editing will be rendered here -->
+                </div>
+
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-lg shadow-lg sticky top-24">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold">Your Order</h3>
+                            <i data-lucide="shopping-cart" class="h-6 w-6 text-orange-500"></i>
+                        </div>
+                        <div id="cart-items" class="divide-y divide-gray-200">
+                            <p id="cart-empty-msg" class="text-gray-500 py-4 text-center">Your cart is empty.</p>
+                        </div>
+                        <div id="cart-summary" class="mt-6 pt-4 border-t-2 border-dashed hidden">
+                            <div class="flex justify-between font-semibold text-lg">
+                                <span>Total</span>
+                                <span id="cart-total">₹0.00</span>
+                            </div>
+                            <button id="checkoutBtn" class="w-full mt-6 bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600">
+                                Proceed to Checkout
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
 
-    <!-- Checkout Modal -->
     <div id="checkoutModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md animate-pop">
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold">Complete Your Order</h2>
                 <button id="closeModalBtn"><i data-lucide="x" class="h-6 w-6 text-gray-500"></i></button>
@@ -252,136 +73,65 @@
             <form id="checkoutForm">
                 <div class="space-y-4">
                     <div>
-                        <label for="customerName" class="block text-sm font-medium text-gray-700">Your Name</label>
-                        <input type="text" id="customerName" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+                        <label for="customerName" class="block text-sm font-medium">Your Name</label>
+                        <input type="text" id="customerName" required class="mt-1 block w-full px-3 py-2 border rounded-md">
                     </div>
                     <div>
-                        <label for="mobileNumber" class="block text-sm font-medium text-gray-700">Mobile Number</label>
-                        <input type="tel" id="mobileNumber" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" placeholder="Enter 10-digit number" pattern="[0-9]{10}">
+                        <label for="mobileNumber" class="block text-sm font-medium">Mobile Number</label>
+                        <input type="tel" id="mobileNumber" required class="mt-1 block w-full px-3 py-2 border rounded-md" pattern="[0-9]{10}">
                     </div>
                 </div>
                 <div class="mt-8">
-                    <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition-colors duration-300 flex items-center justify-center space-x-2">
-                        <i data-lucide="lock" class="h-5 w-5"></i>
-                        <span>Pay & Place Order</span>
+                    <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600">
+                        Place Order
                     </button>
                 </div>
             </form>
         </div>
     </div>
     
-    <!-- Toast Notification -->
-    <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-pop z-50">
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-lg">
         <p id="toast-message"></p>
     </div>
 
     <script>
-        // --- API BASE URL ---
-        const API_BASE_URL = 'http://localhost:5000/api';
-
-        // --- STATE MANAGEMENT ---
+        const API_BASE_URL = '/api';
         let menuItems = {};
-        let allCategories = [];
-        let activeCategory = 'all';
         let cart = [];
-        let orders = [];
-        let currentView = 'customer';
 
-        // --- DOM ELEMENTS ---
+        // --- DOM Elements ---
         const menuContainer = document.getElementById('menu-container');
         const loadingMenu = document.getElementById('loading-menu');
-        const errorMenu = document.getElementById('error-menu');
-        const retryMenuBtn = document.getElementById('retry-menu');
-        const categoryTabs = document.getElementById('category-tabs');
         const cartItemsContainer = document.getElementById('cart-items');
         const cartEmptyMsg = document.getElementById('cart-empty-msg');
         const cartSummary = document.getElementById('cart-summary');
         const cartTotalEl = document.getElementById('cart-total');
-        const cartCountEl = document.getElementById('cart-count');
-        const checkoutBtn = document.getElementById('checkoutBtn');
         const checkoutModal = document.getElementById('checkoutModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
         const checkoutForm = document.getElementById('checkoutForm');
-        const customerView = document.getElementById('customerView');
-        const adminView = document.getElementById('adminView');
-        const customerViewBtn = document.getElementById('customerViewBtn');
-        const adminViewBtn = document.getElementById('adminViewBtn');
-        const ordersContainer = document.getElementById('orders-container');
-        const noOrdersMsg = document.getElementById('no-orders-msg');
-        const adminNotification = document.getElementById('adminNotification');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        
-        // Admin view specific elements
-        const liveOrdersTabBtn = document.getElementById('liveOrdersTabBtn');
-        const menuEditorTabBtn = document.getElementById('menuEditorTabBtn');
-        const liveOrdersView = document.getElementById('liveOrdersView');
-        const menuEditorView = document.getElementById('menuEditorView');
-        const menuItemForm = document.getElementById('menuItemForm');
-        const currentMenuList = document.getElementById('current-menu-list');
 
-        // --- UTILITY FUNCTIONS ---
+        // --- Utility Functions ---
         const formatCurrency = (amount) => `₹${parseFloat(amount).toFixed(2)}`;
 
-        const showToast = (message, isError = false) => {
-            toast.classList.toggle('bg-red-500', isError);
-            toast.classList.toggle('bg-green-500', !isError);
-            toastMessage.textContent = message;
+        const showToast = (message) => {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
             toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
         };
 
-        const showLoading = (show = true) => {
-            loadingMenu.classList.toggle('hidden', !show);
-            menuContainer.classList.toggle('hidden', show);
-            errorMenu.classList.add('hidden');
-        };
-
-        const showError = (show = true) => {
-            errorMenu.classList.toggle('hidden', !show);
-            loadingMenu.classList.add('hidden');
-            menuContainer.classList.toggle('hidden', show);
-        };
-
-        // --- API FUNCTIONS ---
+        // --- API Functions ---
         const fetchMenuItems = async () => {
             try {
-                showLoading(true);
                 const response = await fetch(`${API_BASE_URL}/menu-items`);
                 const data = await response.json();
-                
                 if (data.success) {
                     menuItems = data.categories;
-                    allCategories = Object.keys(menuItems);
-                    renderCategoryTabs();
                     renderMenu();
-                    showLoading(false);
-                } else {
-                    throw new Error(data.error || 'Failed to fetch menu items');
+                    loadingMenu.classList.add('hidden');
+                    menuContainer.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Error fetching menu items:', error);
-                showError(true);
-                showToast('Failed to load menu items', true);
-            }
-        };
-
-        const fetchOrders = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/orders`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    orders = data.orders;
-                    renderOrders();
-                } else {
-                    throw new Error(data.error || 'Failed to fetch orders');
-                }
-            } catch (error) {
-                console.error('Error fetching orders:', error);
-                showToast('Failed to load orders', true);
             }
         };
 
@@ -389,137 +139,30 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/orders`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data;
-                } else {
-                    throw new Error(data.error || 'Failed to create order');
-                }
+                return await response.json();
             } catch (error) {
                 console.error('Error creating order:', error);
-                throw error;
             }
         };
 
-        const addMenuItem = async (itemData) => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/menu-items`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(itemData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data.item;
-                } else {
-                    throw new Error(data.error || 'Failed to add menu item');
-                }
-            } catch (error) {
-                console.error('Error adding menu item:', error);
-                throw error;
-            }
-        };
-
-        const deleteMenuItem = async (itemId) => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/menu-items/${itemId}`, {
-                    method: 'DELETE'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data;
-                } else {
-                    throw new Error(data.error || 'Failed to delete menu item');
-                }
-            } catch (error) {
-                console.error('Error deleting menu item:', error);
-                throw error;
-            }
-        };
-
-        const completeOrder = async (orderId) => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/orders/${orderId}/complete`, {
-                    method: 'PUT'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data;
-                } else {
-                    throw new Error(data.error || 'Failed to complete order');
-                }
-            } catch (error) {
-                console.error('Error completing order:', error);
-                throw error;
-            }
-        };
-
-        // --- RENDER FUNCTIONS ---
-        const renderCategoryTabs = () => {
-            const allButton = categoryTabs.querySelector('[data-category="all"]');
-            
-            allCategories.forEach(category => {
-                const button = document.createElement('button');
-                button.className = 'category-tab px-6 py-3 rounded-full text-sm font-medium bg-white shadow-md hover:shadow-lg transition-all duration-300';
-                button.dataset.category = category;
-                button.textContent = category;
-                categoryTabs.appendChild(button);
-            });
-        };
-
+        // --- Render Functions ---
         const renderMenu = () => {
             menuContainer.innerHTML = '';
-            
-            const itemsToShow = activeCategory === 'all' 
-                ? Object.values(menuItems).flat()
-                : menuItems[activeCategory] || [];
-
-            if (itemsToShow.length === 0) {
-                menuContainer.innerHTML = `
-                    <div class="col-span-full text-center py-12">
-                        <i data-lucide="utensils" class="mx-auto h-12 w-12 text-gray-400"></i>
-                        <h3 class="mt-2 text-lg font-medium text-gray-900">No items available</h3>
-                        <p class="mt-1 text-gray-500">Check back later for delicious options!</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            itemsToShow.forEach(item => {
+            const allItems = Object.values(menuItems).flat();
+            allItems.forEach(item => {
                 const menuItemEl = document.createElement('div');
                 menuItemEl.className = 'menu-item-card bg-white rounded-lg shadow-md overflow-hidden';
                 menuItemEl.innerHTML = `
-                    <div class="relative">
-                        <img src="${item.image_url}" alt="${item.name}" 
-                             class="h-48 w-full object-cover" 
-                             onerror="this.src='https://placehold.co/600x400/cccccc/ffffff?text=Image+Not+Found'">
-                        <div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            ${item.category}
-                        </div>
-                    </div>
+                    <img src="${item.image_url}" alt="${item.name}" class="h-48 w-full object-cover">
                     <div class="p-4">
-                        <h4 class="text-lg font-bold text-gray-900">${item.name}</h4>
-                        <p class="text-sm text-gray-600 mt-1 line-clamp-2">${item.description}</p>
+                        <h4 class="text-lg font-bold">${item.name}</h4>
+                        <p class="text-sm text-gray-600 mt-1">${item.description}</p>
                         <div class="flex justify-between items-center mt-4">
                             <span class="text-xl font-bold text-orange-600">${formatCurrency(item.price)}</span>
-                            <button class="add-to-cart-btn bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold px-4 py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105" data-id="${item.id}">
-                                <i data-lucide="plus" class="h-4 w-4 inline mr-1"></i>
+                            <button class="add-to-cart-btn bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg" data-id="${item.id}">
                                 Add to Cart
                             </button>
                         </div>
@@ -527,356 +170,99 @@
                 `;
                 menuContainer.appendChild(menuItemEl);
             });
-            
             lucide.createIcons();
         };
 
         const renderCart = () => {
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCountEl.textContent = totalItems;
-
             if (cart.length === 0) {
                 cartEmptyMsg.classList.remove('hidden');
                 cartItemsContainer.innerHTML = '';
                 cartItemsContainer.appendChild(cartEmptyMsg);
                 cartSummary.classList.add('hidden');
-                return;
-            }
-
-            cartEmptyMsg.classList.add('hidden');
-            cartItemsContainer.innerHTML = '';
-            cartSummary.classList.remove('hidden');
-
-            cart.forEach(cartItem => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'py-4 flex items-center justify-between animate-pop';
-                itemEl.innerHTML = `
-                    <div class="flex-1">
-                        <p class="font-semibold text-gray-900">${cartItem.name}</p>
-                        <p class="text-sm text-gray-500">${formatCurrency(cartItem.price)} each</p>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <button class="quantity-change w-8 h-8 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" data-id="${cartItem.id}" data-change="-1">
-                            <i data-lucide="minus" class="h-3 w-3"></i>
-                        </button>
-                        <span class="font-bold w-8 text-center">${cartItem.quantity}</span>
-                        <button class="quantity-change w-8 h-8 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center transition-colors" data-id="${cartItem.id}" data-change="1">
-                            <i data-lucide="plus" class="h-3 w-3"></i>
-                        </button>
-                        <button class="remove-item text-red-500 hover:text-red-700 ml-2 p-1" data-id="${cartItem.id}">
-                            <i data-lucide="trash-2" class="h-4 w-4"></i>
-                        </button>
-                    </div>
-                `;
-                cartItemsContainer.appendChild(itemEl);
-            });
-            
-            lucide.createIcons();
-            
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            cartTotalEl.textContent = formatCurrency(total);
-        };
-
-        const renderOrders = () => {
-            if (orders.length === 0) {
-                noOrdersMsg.classList.remove('hidden');
-                ordersContainer.innerHTML = '';
-                ordersContainer.appendChild(noOrdersMsg);
-                return;
-            }
-
-            noOrdersMsg.classList.add('hidden');
-            ordersContainer.innerHTML = '';
-            
-            orders.forEach(order => {
-                const orderCard = document.createElement('div');
-                orderCard.className = 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-orange-400';
-                orderCard.innerHTML = `
-                    <div class="flex justify-between items-start">
+            } else {
+                cartEmptyMsg.classList.add('hidden');
+                cartItemsContainer.innerHTML = '';
+                cartSummary.classList.remove('hidden');
+                cart.forEach(cartItem => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'py-4 flex items-center justify-between';
+                    itemEl.innerHTML = `
                         <div>
-                            <p class="text-sm text-gray-500">Order #${order.id}</p>
-                            <p class="text-lg font-bold text-gray-900">Customer: ${order.customer_name}</p>
-                            <p class="text-md font-semibold text-gray-700">Mobile: ${order.mobile_number}</p>
+                            <p class="font-semibold">${cartItem.name}</p>
+                            <p class="text-sm text-gray-500">${cartItem.quantity} x ${formatCurrency(cartItem.price)}</p>
                         </div>
-                        <div class="text-right">
-                             <p class="text-sm text-gray-500">${new Date(order.created_at).toLocaleTimeString()}</p>
-                             <p class="font-bold text-xl mt-2 text-green-600">${formatCurrency(order.total_amount)}</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <h4 class="font-semibold mb-2">Items:</h4>
-                        <ul class="list-disc list-inside text-gray-700 space-y-1">
-                            ${order.items.map(item => `<li>${item.quantity} x ${item.name}</li>`).join('')}
-                        </ul>
-                    </div>
-                    <div class="mt-4 text-right">
-                        <button class="complete-order-btn bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors shadow-md" data-id="${order.id}">
-                            <i data-lucide="check-circle" class="h-4 w-4 inline mr-1"></i>
-                            Mark as Complete
+                        <button class="remove-item text-red-500" data-id="${cartItem.id}">
+                           <i data-lucide="trash-2" class="h-4 w-4"></i>
                         </button>
-                    </div>
-                `;
-                ordersContainer.appendChild(orderCard);
-            });
-            
-            lucide.createIcons();
-        };
-
-        const renderMenuEditor = () => {
-            currentMenuList.innerHTML = '';
-            const allItems = Object.values(menuItems).flat();
-            
-            if (allItems.length === 0) {
-                currentMenuList.innerHTML = `<p class="text-center text-gray-500 py-8">No items on the menu yet.</p>`;
-                return;
+                    `;
+                    cartItemsContainer.appendChild(itemEl);
+                });
+                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                cartTotalEl.textContent = formatCurrency(total);
             }
-            
-            allItems.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'bg-white p-4 rounded-lg shadow-sm flex items-center justify-between hover:shadow-md transition-shadow';
-                itemEl.innerHTML = `
-                    <div class="flex items-center space-x-4">
-                        <img src="${item.image_url}" alt="${item.name}" 
-                             class="h-16 w-16 object-cover rounded-md" 
-                             onerror="this.src='https://placehold.co/100x100/cccccc/ffffff?text=Image'">
-                        <div>
-                            <p class="font-bold text-gray-900">${item.name}</p>
-                            <p class="text-sm text-gray-600">${item.category}</p>
-                            <p class="text-sm font-semibold text-orange-600">${formatCurrency(item.price)}</p>
-                        </div>
-                    </div>
-                    <button class="delete-menu-item-btn text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors" data-id="${item.id}">
-                        <i data-lucide="trash-2" class="h-5 w-5"></i>
-                    </button>
-                `;
-                currentMenuList.appendChild(itemEl);
-            });
-            
             lucide.createIcons();
         };
 
-        // --- EVENT HANDLERS ---
-        const handleCategoryFilter = (e) => {
-            if (!e.target.classList.contains('category-tab')) return;
-            
-            // Update active category
-            document.querySelectorAll('.category-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            e.target.classList.add('active');
-            
-            activeCategory = e.target.dataset.category;
-            renderMenu();
-        };
-
+        // --- Event Handlers ---
         const handleAddToCart = (e) => {
             if (!e.target.classList.contains('add-to-cart-btn')) return;
-            
             const itemId = parseInt(e.target.dataset.id);
             const allItems = Object.values(menuItems).flat();
             const item = allItems.find(i => i.id === itemId);
-            
             if (!item) return;
-            
+
             const cartItem = cart.find(i => i.id === itemId);
             if (cartItem) {
                 cartItem.quantity++;
             } else {
                 cart.push({ ...item, quantity: 1 });
             }
-            
             showToast(`${item.name} added to cart!`);
             renderCart();
         };
 
-        const handleCartUpdate = (e) => {
-            const target = e.target.closest('button');
-            if (!target) return;
-            
-            const itemId = parseInt(target.dataset.id);
-            
-            if (target.classList.contains('quantity-change')) {
-                const change = parseInt(target.dataset.change);
-                const itemInCart = cart.find(item => item.id === itemId);
-                if (itemInCart) {
-                    itemInCart.quantity += change;
-                    if (itemInCart.quantity <= 0) {
-                        cart = cart.filter(item => item.id !== itemId);
-                    }
-                }
-            }
-            
-            if (target.classList.contains('remove-item')) {
-                cart = cart.filter(item => item.id !== itemId);
-            }
-            
-            renderCart();
-        };
-
+        // --- MODIFIED: The order data payload is now simpler ---
         const handlePlaceOrder = async (e) => {
             e.preventDefault();
-            
             const customerName = document.getElementById('customerName').value;
             const mobileNumber = document.getElementById('mobileNumber').value;
-            
-            if (!customerName || !mobileNumber) {
-                showToast("Please fill in your name and mobile number.", true);
-                return;
-            }
             
             const orderData = {
                 customer_name: customerName,
                 mobile_number: mobileNumber,
-                items: cart,
-                total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+                items: cart
             };
             
-            try {
-                const result = await createOrder(orderData);
+            const result = await createOrder(orderData);
+            if (result.success) {
                 cart = [];
                 renderCart();
                 checkoutForm.reset();
                 checkoutModal.classList.add('hidden');
                 showToast("Order placed successfully!");
-                adminNotification.classList.remove('hidden');
-                
-                if (currentView === 'admin') {
-                    fetchOrders();
-                }
-            } catch (error) {
-                showToast("Failed to place order. Please try again.", true);
-            }
-        };
-
-        const handleAddMenuItem = async (e) => {
-            e.preventDefault();
-            
-            const itemData = {
-                name: document.getElementById('itemName').value,
-                description: document.getElementById('itemDescription').value,
-                price: parseFloat(document.getElementById('itemPrice').value),
-                category: document.getElementById('itemCategory').value,
-                image_url: document.getElementById('itemImage').value
-            };
-
-            if (!itemData.name || !itemData.description || !itemData.price || !itemData.category || !itemData.image_url) {
-                showToast("Please fill all fields.", true);
-                return;
-            }
-
-            try {
-                await addMenuItem(itemData);
-                await fetchMenuItems(); // Refresh menu items
-                renderMenuEditor();
-                menuItemForm.reset();
-                showToast("Menu item added successfully!");
-            } catch (error) {
-                showToast("Failed to add menu item.", true);
-            }
-        };
-
-        const handleDeleteMenuItem = async (e) => {
-            const deleteBtn = e.target.closest('.delete-menu-item-btn');
-            if (!deleteBtn) return;
-            
-            const itemId = parseInt(deleteBtn.dataset.id);
-            
-            if (confirm('Are you sure you want to delete this menu item?')) {
-                try {
-                    await deleteMenuItem(itemId);
-                    await fetchMenuItems(); // Refresh menu items
-                    renderMenuEditor();
-                    showToast("Menu item removed.", true);
-                } catch (error) {
-                    showToast("Failed to delete menu item.", true);
-                }
-            }
-        };
-
-        const handleCompleteOrder = async (e) => {
-            if (!e.target.classList.contains('complete-order-btn')) return;
-            
-            const orderId = parseInt(e.target.dataset.id);
-            
-            try {
-                await completeOrder(orderId);
-                await fetchOrders(); // Refresh orders
-                showToast(`Order #${orderId} marked as complete.`);
-            } catch (error) {
-                showToast("Failed to complete order.", true);
-            }
-        };
-
-        const switchView = (view) => {
-            currentView = view;
-            if (view === 'customer') {
-                customerView.classList.remove('hidden');
-                adminView.classList.add('hidden');
-                customerViewBtn.classList.add('bg-orange-500', 'text-white', 'shadow-sm');
-                adminViewBtn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
             } else {
-                customerView.classList.add('hidden');
-                adminView.classList.remove('hidden');
-                adminViewBtn.classList.add('bg-orange-500', 'text-white', 'shadow-sm');
-                customerViewBtn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
-                adminNotification.classList.add('hidden');
-                fetchOrders();
-                renderMenuEditor();
-                switchAdminTab('orders');
+                showToast("Failed to place order.", true);
             }
         };
 
-        const switchAdminTab = (tab) => {
-            if (tab === 'orders') {
-                liveOrdersView.classList.remove('hidden');
-                menuEditorView.classList.add('hidden');
-                liveOrdersTabBtn.classList.add('border-orange-500', 'text-orange-600');
-                liveOrdersTabBtn.classList.remove('border-transparent', 'text-gray-500');
-                menuEditorTabBtn.classList.add('border-transparent', 'text-gray-500');
-                menuEditorTabBtn.classList.remove('border-orange-500', 'text-orange-600');
-            } else if (tab === 'menu') {
-                liveOrdersView.classList.add('hidden');
-                menuEditorView.classList.remove('hidden');
-                menuEditorTabBtn.classList.add('border-orange-500', 'text-orange-600');
-                menuEditorTabBtn.classList.remove('border-transparent', 'text-gray-500');
-                liveOrdersTabBtn.classList.add('border-transparent', 'text-gray-500');
-                liveOrdersTabBtn.classList.remove('border-orange-500', 'text-orange-600');
-            }
-        };
-
-        // --- EVENT LISTENERS ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
-            await fetchMenuItems();
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMenuItems();
             renderCart();
+            lucide.createIcons();
         });
 
-        categoryTabs.addEventListener('click', handleCategoryFilter);
         menuContainer.addEventListener('click', handleAddToCart);
-        cartItemsContainer.addEventListener('click', handleCartUpdate);
-        checkoutBtn.addEventListener('click', () => checkoutModal.classList.remove('hidden'));
-        closeModalBtn.addEventListener('click', () => checkoutModal.classList.add('hidden'));
-        checkoutModal.addEventListener('click', (e) => {
-            if(e.target === checkoutModal) checkoutModal.classList.add('hidden');
-        });
-        checkoutForm.addEventListener('submit', handlePlaceOrder);
-        customerViewBtn.addEventListener('click', () => switchView('customer'));
-        adminViewBtn.addEventListener('click', () => switchView('admin'));
-        ordersContainer.addEventListener('click', handleCompleteOrder);
-        retryMenuBtn.addEventListener('click', fetchMenuItems);
-
-        // Admin view listeners
-        liveOrdersTabBtn.addEventListener('click', () => switchAdminTab('orders'));
-        menuEditorTabBtn.addEventListener('click', () => switchAdminTab('menu'));
-        menuItemForm.addEventListener('submit', handleAddMenuItem);
-        currentMenuList.addEventListener('click', handleDeleteMenuItem);
-
-        // Auto-refresh orders every 30 seconds when in admin view
-        setInterval(() => {
-            if (currentView === 'admin') {
-                fetchOrders();
+        cartItemsContainer.addEventListener('click', (e) => {
+             if (e.target.closest('.remove-item')) {
+                const itemId = parseInt(e.target.closest('.remove-item').dataset.id);
+                cart = cart.filter(item => item.id !== itemId);
+                renderCart();
             }
-        }, 30000);
+        });
+        document.getElementById('checkoutBtn').addEventListener('click', () => checkoutModal.classList.remove('hidden'));
+        document.getElementById('closeModalBtn').addEventListener('click', () => checkoutModal.classList.add('hidden'));
+        checkoutForm.addEventListener('submit', handlePlaceOrder);
     </script>
 </body>
 </html>
