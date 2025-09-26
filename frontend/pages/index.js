@@ -41,10 +41,26 @@ export default function MenuPage({ menuItems }) {
 
 // Fetch data at build time from your backend API
 export async function getStaticProps() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/menu`);
-  const menuItems = await res.json();
-  return {
-    props: { menuItems },
-    revalidate: 60, // Re-fetch menu data every 60 seconds
-  };
+  try {
+    // Use the full URL for the API call
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const res = await fetch(`${apiUrl}/api/menu`);
+    
+    if (!res.ok) {
+      throw new Error('Failed to fetch menu items');
+    }
+    
+    const menuItems = await res.json();
+    
+    return {
+      props: { menuItems },
+      revalidate: 60, // Re-fetch menu data every 60 seconds
+    };
+  } catch (error) {
+    console.error('Error fetching menu items:', error);
+    return {
+      props: { menuItems: [] },
+      revalidate: 60,
+    };
+  }
 }
