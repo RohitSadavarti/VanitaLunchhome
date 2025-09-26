@@ -2,21 +2,18 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import os # Import the 'os' module to access environment variables
+import os
 
-# The Flask app must be named 'app' for Vercel to detect it
 app = Flask(__name__)
 CORS(app)
 
-# --- MODIFIED: Use Environment Variables for Database Configuration ---
-# This is more secure and necessary for deployment.
-# You will set these variables in the Vercel dashboard.
+# --- Use Environment Variables for Database Configuration ---
 DB_CONFIG = {
     'host': os.environ.get('DB_HOST'),
     'database': os.environ.get('DB_NAME'),
     'user': os.environ.get('DB_USER'),
     'password': os.environ.get('DB_PASSWORD'),
-    'port': os.environ.get('DB_PORT', '5432') # Default to 5432 if not set
+    'port': os.environ.get('DB_PORT', '5432')
 }
 
 def get_db_connection():
@@ -29,19 +26,7 @@ def get_db_connection():
         return None
 
 # --- API Routes ---
-
-# MODIFIED: This route serves your frontend
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_frontend(path):
-    """Serve the main HTML file for the root path."""
-    if path == "":
-        # We need to adjust the path to find index.html from inside the 'api' folder
-        return send_from_directory('../customer/template', 'index.html')
-    else:
-        # This can be used to serve other static files if needed, otherwise return 404
-        return "Not Found", 404
-
+# These handle your application's data.
 
 @app.route('/api/menu-items')
 def get_menu_items():
@@ -116,5 +101,11 @@ def create_order():
             conn.rollback()
         return jsonify({'error': f'Database error: {str(e)}'}), 500
 
-# REMOVED: The init_database() and app.run() block.
-# Vercel handles running the app, and you should manage your database schema separately (e.g., using a migration tool or connecting directly).
+# --- Frontend Serving Route ---
+# This single route serves your main webpage.
+# It should be defined AFTER your API routes.
+
+@app.route('/')
+def serve_frontend():
+    """Serve the main HTML file."""
+    return send_from_directory('../customer/template', 'index.html')
