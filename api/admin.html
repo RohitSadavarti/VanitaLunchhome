@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Admin Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a2e;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-form {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        .login-form h2 {
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+        }
+
+        .dashboard {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .orders-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: calc(100vh - 120px);
+        }
+
+        .orders-column {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .preparing-column {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border-right: 3px solid #f39c12;
+        }
+
+        .ready-column {
+            background: linear-gradient(135deg, #d1edff, #a8e6cf);
+        }
+
+        .column-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .preparing-column .column-header {
+            background: rgba(243, 156, 18, 0.2);
+            color: #d35400;
+        }
+
+        .ready-column .column-header {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+        }
+
+        .column-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .order-count {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            border-left: 5px solid #3498db;
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .order-card.new-order {
+            animation: orderPulse 2s infinite;
+        }
+
+        @keyframes orderPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-id {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .order-time {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .customer-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .customer-mobile {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .order-items {
+            margin-bottom: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: 500;
+        }
+
+        .item-quantity {
+            color: #7f8c8d;
+        }
+
+        .order-total {
+            text-align: center;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .payment-method {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mark-ready-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .mark-ready-btn:hover {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            transform: translateY(-2px);
+        }
+
+        .ready-card {
+            opacity: 0.8;
+        }
+
+        .notification-sound {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .connection-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .orders-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .order-card {
+                padding: 15px;
+            }
+            
+            .logout-btn {
+                position: static;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <h2>🍽️ Admin Login</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button class="login-btn" onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <div class="connection-status" id="connectionStatus">🔴 Disconnected</div>
+        
+        <div class="header">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            <h1>🍽️ Restaurant Dashboard</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div>Preparing Orders</div>
+                    <div id="preparingCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div>Ready Orders</div>
+                    <div id="readyCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div>Total Today</div>
+                    <div id="todayTotal">₹0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="orders-container">
+            <!-- Preparing Orders Column -->
+            <div class="orders-column preparing-column">
+                <div class="column-header">
+                    <h2>🔥 Preparing</h2>
+                    <div class="order-count">
+                        <span id="preparingCountDisplay">0</span> orders in kitchen
+                    </div>
+                </div>
+                <div id="preparingOrders">
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">👨‍🍳</div>
+                        <p>No orders being prepared</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ready Orders Column -->
+            <div class="orders-column ready-column">
+                <div class="column-header">
+                    <h2>✅ Ready</h2>
+                    <div class="order-count">
+                        <span id="readyCountDisplay">0</span> orders ready for pickup
+                    </div>
+                </div>
+                <div id="readyOrders">
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+                        <p>No orders ready yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio for notifications -->
+    <audio id="notificationSound" class="notification-sound" preload="auto">
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAhkbqdfm2eiP//tQxA4DwJcBfKNPMKwdASiGFGT5//8sJ6LqZ0IwVUbYmVlZMZNAjIGBwREGCGUDACEJaLqZ0IwWUbYmVlZMZNAjIGBwREGCGUDACEJa" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let orders = [];
+        let socket;
+        const API_URL = 'https://vanitalunchhome.vercel.app';
+        
+        // Admin credentials (in production, use proper authentication)
+        const ADMIN_CREDENTIALS = {
+            username: 'admin',
+            password: 'admin123'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+        });
+
+        function checkAuthentication() {
+            const isAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
+            if (isAuthenticated) {
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                localStorage.setItem('adminAuthenticated', 'true');
+                showDashboard();
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminAuthenticated');
+            if (socket) {
+                socket.disconnect();
+            }
+            showLogin();
+        }
+
+        function showLogin() {
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('dashboard').classList.remove('active');
+        }
+
+        function showDashboard() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            initializeDashboard();
+        }
+
+        function initializeDashboard() {
+            loadOrders();
+            connectWebSocket();
+            
+            // Refresh orders every 30 seconds
+            setInterval(loadOrders, 30000);
+        }
+
+        function connectWebSocket() {
+            socket = io(API_URL);
+            
+            socket.on('connect', function() {
+                document.getElementById('connectionStatus').textContent = '🟢 Connected';
+                document.getElementById('connectionStatus').className = 'connection-status connected';
+            });
+
+            socket.on('disconnect', function() {
+                document.getElementById('connectionStatus').textContent = '🔴 Disconnected';
+                document.getElementById('connectionStatus').className = 'connection-status disconnected';
+            });
+
+            socket.on('new_order', function(newOrder) {
+                // Add new order to the beginning of the array
+                orders.unshift(newOrder);
+                displayOrders();
+                playNotificationSound();
+                
+                // Highlight the new order
+                setTimeout(() => {
+                    const newOrderElement = document.querySelector('.order-card');
+                    if (newOrderElement) {
+                        newOrderElement.classList.add('new-order');
+                        setTimeout(() => {
+                            newOrderElement.classList.remove('new-order');
+                        }, 5000);
+                    }
+                }, 100);
+            });
+
+            socket.on('order_status_update', function(updatedOrder) {
+                const index = orders.findIndex(o => o.id === updatedOrder.id);
+                if (index !== -1) {
+                    orders[index] = updatedOrder;
+                    displayOrders();
+                }
+            });
+        }
+
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_URL}/api/orders`);
+                if (response.ok) {
+                    orders = await response.json();
+                    displayOrders();
+                } else {
+                    console.error('Failed to load orders');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function displayOrders() {
+            const preparingOrders = orders.filter(order => order.status === 'Preparing');
+            const readyOrders = orders.filter(order => order.status === 'Ready');
+
+            displayOrdersInColumn('preparingOrders', preparingOrders, 'preparing');
+            displayOrdersInColumn('readyOrders', readyOrders, 'ready');
+
+            updateStats(preparingOrders, readyOrders);
+        }
+
+        function displayOrdersInColumn(containerId, ordersList, type) {
+            const container = document.getElementById(containerId);
+            
+            if (ordersList.length === 0) {
+                const emptyMessage = type === 'preparing' ? 
+                    '<div class="empty-state"><div style="font-size: 4rem; margin-bottom: 20px;">👨‍🍳</div><p>No orders being prepared</p></div>' :
+                    '<div class="empty-state"><div style="font-size: 4rem; margin-bottom: 20px;">🎉</div><p>No orders ready yet</p></div>';
+                container.innerHTML = emptyMessage;
+                return;
+            }
+
+            container.innerHTML = '';
+            ordersList.forEach(order => {
+                const orderCard = createOrderCard(order, type);
+                container.appendChild(orderCard);
+            });
+        }
+
+        function createOrderCard(order, type) {
+            const orderDiv = document.createElement('div');
+            orderDiv.className = `order-card ${type === 'ready' ? 'ready-card' : ''}`;
+            
+            const orderTime = new Date(order.created_at).toLocaleString('en-IN');
+            const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
+            
+            orderDiv.innerHTML = `
+                <div class="order-header">
+                    <div class="order-id">Order #${order.id}</div>
+                    <div class="order-time">${orderTime}</div>
+                </div>
+                
+                <div class="customer-info">
+                    <div class="customer-name">👤 ${order.customer_name || 'Walk-in Customer'}</div>
+                    <div class="customer-mobile">📱 ${order.customer_mobile || 'No mobile'}</div>
+                </div>
+                
+                <div class="order-items">
+                    ${items.map(item => `
+                        <div class="order-item">
+                            <span class="item-name">${item.name || item.item_name || 'Item'}</span>
+                            <span class="item-quantity">x ${item.quantity}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="order-total">
+                    <div class="total-amount">₹${(order.total_price || 0).toFixed(2)}</div>
+                    <div class="payment-method">${order.payment_method || 'Cash'}</div>
+                </div>
+                
+                ${type === 'preparing' ? `
+                    <button class="action-btn mark-ready-btn" onclick="markAsReady(${order.id})">
+                        ✅ Mark as Ready
+                    </button>
+                ` : ''}
+            `;
+            
+            return orderDiv;
+        }
+
+        async function markAsReady(orderId) {
+            try {
+                const response = await fetch(`${API_URL}/api/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'Ready' })
+                });
+
+                if (response.ok) {
+                    const updatedOrder = await response.json();
+                    const index = orders.findIndex(o => o.id === orderId);
+                    if (index !== -1) {
+                        orders[index] = updatedOrder;
+                        displayOrders();
+                    }
+                } else {
+                    alert('Failed to update order status');
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('Error updating order status');
+            }
+        }
+
+        function updateStats(preparingOrders, readyOrders) {
+            document.getElementById('preparingCount').textContent = preparingOrders.length;
+            document.getElementById('readyCount').textContent = readyOrders.length;
+            document.getElementById('preparingCountDisplay').textContent = preparingOrders.length;
+            document.getElementById('readyCountDisplay').textContent = readyOrders.length;
+
+            // Calculate today's total
+            const today = new Date().toDateString();
+            const todayOrders = orders.filter(order => 
+                new Date(order.created_at).toDateString() === today
+            );
+            const todayTotal = todayOrders.reduce((sum, order) => sum + (order.total_price || 0), 0);
+            document.getElementById('todayTotal').textContent = `₹${todayTotal.toFixed(2)}`;
+        }
+
+        function playNotificationSound() {
+            try {
+                // Create a simple beep sound using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+            } catch (error) {
+                console.log('Could not play notification sound:', error);
+            }
+        }
+
+        // Handle enter key in login form
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && document.getElementById('loginContainer').style.display !== 'none') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
