@@ -19,7 +19,8 @@ DB_CONFIG = {
 def get_db_connection():
     """Create and return a database connection."""
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        # Add sslmode='require' for connecting to Supabase
+        conn = psycopg2.connect(**DB_CONFIG, sslmode='require')
         return conn
     except psycopg2.Error as e:
         print(f"Database connection error: {e}")
