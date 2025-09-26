@@ -8,7 +8,12 @@ bp = Blueprint('api', __name__)
 
 @bp.route('/api/menu', methods=['GET'])
 def get_menu():
-    menu_items = MenuItem.query.all()
+    """
+    This function executes a query equivalent to:
+    SELECT id, item_name, description, price, category, veg_nonveg 
+    FROM menu_items;
+    """
+    menu_items = MenuItem.query.all() # This is the correct query
     return jsonify([item.to_dict() for item in menu_items])
 
 @bp.route('/api/orders', methods=['GET'])
