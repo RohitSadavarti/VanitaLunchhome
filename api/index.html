@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Menu - Order Online</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 100px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+        }
+
+        .item-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .item-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .item-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .item-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .item-category {
+            background: #ecf0f1;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+
+        .veg-indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #27ae60;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+        }
+
+        .veg-indicator.veg {
+            border-color: #27ae60;
+        }
+
+        .veg-indicator.nonveg {
+            border-color: #e74c3c;
+        }
+
+        .veg-indicator::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .veg-indicator.veg::after {
+            background: #27ae60;
+        }
+
+        .veg-indicator.nonveg::after {
+            background: #e74c3c;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-to-cart:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: scale(1.02);
+        }
+
+        .cart-summary {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .cart-summary.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .customer-form {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .payment-options {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .payment-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .payment-btn.razorpay {
+            background: #528FF0;
+            color: white;
+        }
+
+        .payment-btn.cash {
+            background: #27ae60;
+            color: white;
+        }
+
+        .total-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .total-row.final {
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Vanita Lunch Home</h1>
+            <p>Delicious food delivered fresh to your table</p>
+        </div>
+
+        <div class="loading" id="loading">Loading menu items...</div>
+        <div class="menu-grid" id="menuGrid"></div>
+    </div>
+
+    <div class="cart-summary" id="cartSummary">
+        <span id="cartText">View Cart (0) - ₹0.00</span>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2>Your Cart</h2>
+            <div id="cartItems"></div>
+            
+            <div class="customer-form">
+                <h3>Customer Details</h3>
+                <div class="form-group">
+                    <label for="customerName">Name *</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerMobile">Mobile Number *</label>
+                    <input type="tel" id="customerMobile" required>
+                </div>
+            </div>
+
+            <div class="total-section">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">₹0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Discount:</span>
+                    <span id="discount">₹0.00</span>
+                </div>
+                <div class="total-row final">
+                    <span>Total:</span>
+                    <span id="total">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="payment-options">
+                <button class="payment-btn razorpay" onclick="payWithRazorpay()">
+                    Pay with Razorpay
+                </button>
+                <button class="payment-btn cash" onclick="payWithCash()">
+                    Cash on Pickup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let menuItems = [];
+        const API_URL = 'https://vanitalunchhome.vercel.app';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMenuItems();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('cartSummary').addEventListener('click', showCartModal);
+            document.getElementById('closeModal').addEventListener('click', hideCartModal);
+            
+            // Close modal when clicking outside
+            document.getElementById('cartModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideCartModal();
+                }
+            });
+        }
+
+        async function loadMenuItems() {
+            const loading = document.getElementById('loading');
+            const menuGrid = document.getElementById('menuGrid');
+            
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/menu`);
+                if (!response.ok) throw new Error('Failed to load menu');
+                
+                menuItems = await response.json();
+                displayMenuItems(menuItems);
+            } catch (error) {
+                console.error('Error loading menu:', error);
+                menuGrid.innerHTML = '<p style="color: white; text-align: center;">Failed to load menu items. Please try again later.</p>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayMenuItems(items) {
+            const menuGrid = document.getElementById('menuGrid');
+            menuGrid.innerHTML = '';
+
+            items.forEach(item => {
+                const menuItemDiv = document.createElement('div');
+                menuItemDiv.className = 'menu-item';
+                menuItemDiv.innerHTML = `
+                    <div class="item-name">${item.item_name}</div>
+                    <div class="item-description">${item.description || 'Delicious item from our kitchen'}</div>
+                    <div class="item-details">
+                        <span class="item-price">₹${item.price.toFixed(2)}</span>
+                        <div>
+                            <span class="item-category">${item.category || 'Main Course'}</span>
+                            <div class="veg-indicator ${item.veg_nonveg === 'Non-Veg' ? 'nonveg' : 'veg'}"></div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart(${item.id})">
+                        Add to Cart
+                    </button>
+                `;
+                menuGrid.appendChild(menuItemDiv);
+            });
+        }
+
+        function addToCart(itemId) {
+            const item = menuItems.find(item => item.id === itemId);
+            if (!item) return;
+
+            const existingItem = cart.find(cartItem => cartItem.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...item,
+                    quantity: 1
+                });
+            }
+
+            updateCartSummary();
+            showCartNotification();
+        }
+
+        function updateCartSummary() {
+            const cartSummary = document.getElementById('cartSummary');
+            const cartText = document.getElementById('cartText');
+            
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            cartText.textContent = `View Cart (${totalItems}) - ₹${totalPrice.toFixed(2)}`;
+            
+            if (totalItems > 0) {
+                cartSummary.classList.add('show');
+            } else {
+                cartSummary.classList.remove('show');
+            }
+        }
+
+        function showCartNotification() {
+            // Simple notification animation
+            const cartSummary = document.getElementById('cartSummary');
+            cartSummary.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                cartSummary.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function showCartModal() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            
+            updateCartModal();
+            document.getElementById('cartModal').classList.add('show');
+        }
+
+        function hideCartModal() {
+            document.getElementById('cartModal').classList.remove('show');
+        }
+
+        function updateCartModal() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            cartItemsDiv.innerHTML = '';
+
+            cart.forEach((item, index) => {
+                const cartItemDiv = document.createElement('div');
+                cartItemDiv.className = 'cart-item';
+                cartItemDiv.innerHTML = `
+                    <div>
+                        <div style="font-weight: bold;">${item.item_name}</div>
+                        <div style="color: #666;">₹${item.price.toFixed(2)} each</div>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                        <span style="font-weight: bold; min-width: 30px; text-align: center;">${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                        <span style="margin-left: 10px; font-weight: bold;">₹${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `;
+                cartItemsDiv.appendChild(cartItemDiv);
+            });
+
+            updateTotalDisplay();
+        }
+
+        function updateQuantity(index, change) {
+            cart[index].quantity += change;
+            
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            
+            updateCartSummary();
+            updateCartModal();
+        }
+
+        function updateTotalDisplay() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discount = 0; // You can implement discount logic here
+            const total = subtotal - discount;
+
+            document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('discount').textContent = `₹${discount.toFixed(2)}`;
+            document.getElementById('total').textContent = `₹${total.toFixed(2)}`;
+        }
+
+        function validateCustomerDetails() {
+            const name = document.getElementById('customerName').value.trim();
+            const mobile = document.getElementById('customerMobile').value.trim();
+
+            if (!name) {
+                alert('Please enter your name');
+                return false;
+            }
+
+            if (!mobile || mobile.length !== 10) {
+                alert('Please enter a valid 10-digit mobile number');
+                return false;
+            }
+
+            return { name, mobile };
+        }
+
+        async function payWithRazorpay() {
+            const customerDetails = validateCustomerDetails();
+            if (!customerDetails) return;
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            const options = {
+                key: 'YOUR_RAZORPAY_KEY', // Replace with your Razorpay key
+                amount: total * 100, // Amount in paise
+                currency: 'INR',
+                name: 'Vanita Lunch Home',
+                description: 'Food Order Payment',
+                prefill: {
+                    name: customerDetails.name,
+                    contact: customerDetails.mobile
+                },
+                handler: function(response) {
+                    processOrder({
+                        ...customerDetails,
+                        payment_method: 'Razorpay',
+                        payment_id: response.razorpay_payment_id
+                    });
+                },
+                modal: {
+                    ondismiss: function() {
+                        alert('Payment cancelled');
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        async function payWithCash() {
+            const customerDetails = validateCustomerDetails();
+            if (!customerDetails) return;
+
+            processOrder({
+                ...customerDetails,
+                payment_method: 'Cash on Pickup'
+            });
+        }
+
+        async function processOrder(customerDetails) {
+            const orderData = {
+                customer_name: customerDetails.name,
+                customer_mobile: customerDetails.mobile,
+                items: cart.map(item => ({
+                    id: item.id,
+                    name: item.item_name,
+                    quantity: item.quantity,
+                    unit_price: item.price,
+                    total_price: item.price * item.quantity
+                })),
+                subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                discount: 0,
+                total_price: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                payment_method: customerDetails.payment_method,
+                payment_id: customerDetails.payment_id || null,
+                status: 'Preparing'
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (response.ok) {
+                    const order = await response.json();
+                    alert(`Order placed successfully! Order ID: #${order.id}`);
+                    
+                    // Clear cart and close modal
+                    cart = [];
+                    updateCartSummary();
+                    hideCartModal();
+                    
+                    // Clear customer details
+                    document.getElementById('customerName').value = '';
+                    document.getElementById('customerMobile').value = '';
+                } else {
+                    throw new Error('Failed to place order');
+                }
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert('Failed to place order. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
